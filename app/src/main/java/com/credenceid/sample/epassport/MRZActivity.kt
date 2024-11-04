@@ -66,6 +66,8 @@ class MRZActivity : AppCompatActivity() {
         binding = MrzActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.docCanEditText.setText("965008")
+
         this.configureLayoutComponents()
     }
 
@@ -400,6 +402,7 @@ class MRZActivity : AppCompatActivity() {
 
     //This function gives example how to read e-id document
     // using the PACE with CAN protocol.
+    @OptIn(ExperimentalStdlibApi::class)
     @SuppressLint("SetTextI18n")
     private fun  readGenericIcaoIdDocument(can: String?) {
 
@@ -417,7 +420,7 @@ class MRZActivity : AppCompatActivity() {
 
         var start = SystemClock.elapsedRealtime()
         Log.d(TAG, "start(elapsedRealtime) = " + start)
-        App.BioManager!!.readICAODocument(can,"GenericIcao", true)
+        App.BioManager!!.readICAODocument(can,"GenericIcao", false)
         { rc: ResultCode, stage: ICAOReadIntermediateCode, hint: String?, data: ICAODocumentData ->
 
             Log.d(TAG, "STAGE: " + stage.name + ", Status: " + rc.name + "Hint: $hint")
@@ -458,6 +461,20 @@ class MRZActivity : AppCompatActivity() {
                 Log.d(TAG, "ICAO Profile read time = " + (SystemClock.elapsedRealtime() - start))
                 binding.statusTextView.text = getString(R.string.icao_done)
                 setReadButtons(isDocumentPresent)
+            } else if (ICAOReadIntermediateCode.DG11 == stage) {
+                Log.d(TAG, "DG11 read")
+                Log.d(TAG, "DG11 data => \n ${data.DG11.toString()}")
+            } else if (ICAOReadIntermediateCode.DG12 == stage) {
+                Log.d(TAG, "DG12 read")
+                Log.d(TAG, "DG12 data => \n ${data.DG12.toString()}")
+            }else if (ICAOReadIntermediateCode.DG13 == stage) {
+                Log.d(TAG, "DG13 read")
+                Log.d(TAG, "DG13 data => \n ${data.DG13.dgData.toHexString(HexFormat.UpperCase)}")
+            }else if (ICAOReadIntermediateCode.DG14 == stage) {
+                Log.d(TAG, "DG14 read")
+                Log.d(TAG, "DG14 data => \n ${ data.DG14.dgData.toHexString(HexFormat.UpperCase)}")
+            }else {
+                Log.d(TAG, "DG read => ${stage.name}")
             }
         }
     }
